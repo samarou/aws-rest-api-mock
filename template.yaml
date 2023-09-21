@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Mocking of integrations REST API in AWS cloud
+
+Globals:
+  Function:
+    Timeout: 60
+    Runtime: nodejs16.x
+    PermissionsBoundary: arn:aws:iam::aws:policy/PowerUserAccess
+
+Resources:
+
+  ProcessRequest:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Processes requests to mocked resources
+      CodeUri: functions/process-request
+      Handler: app.lambdaHandler
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Layers:
+        - !Ref RestApiMockLayer
+      Environment:
+        Variables:
+          CustomMappingTableName: !Ref CustomMappingTable
+          LogTableName: !Ref LogTable
+      Events:
+        ProcessRequest:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId: !Ref MockHttpApi
+
+  ManageCustomMappings:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Adds, updates, deletes custom mappings
+      CodeUri: functions/manage-custom-mappings
+      Handler: app.lambdaHandler
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Layers:
+        - !Ref RestApiMockLayer
+      Environment:
+        Variables:
+          CustomMappingTableName: !Ref CustomMappingTable
+      Events:
+        GetCustomMappings:
+          Type: HttpApi
+          Properties:
+            Path: /__mock/{correlationId}/mappings
+            Method: GET
+            ApiId: !Ref MockHttpApi
+        AddCustomMappings:
+          Type: HttpApi
+          Properties:
+            Path: /__mock/{correlationId}/mappings
+            Method: POST
+            ApiId: !Ref MockHttpApi
+        DeleteCustomMapping:
+          Type: HttpApi
+          Properties:
+            Path: /__mock/{correlationId}/mappings/{mappingId}
+            Method: DELETE
+            ApiId: !Ref MockHttpApi
+
+  GetLogEntries:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Returns log entries related to correlation id
+      CodeUri: functions/get-log-entries
+      Handler: app.lambdaHandler
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Layers:
+        - !Ref RestApiMockLayer
+      Environment:
+        Variables:
+          LogTableName: !Ref LogTable
+      Events:
+        GetCustomMappings:
+          Type: HttpApi
+          Properties:
+            Path: /__mock/{correlationId}/log
+            Method: GET
+            ApiId: !Ref MockHttpApi
+
+  RestApiMockLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: rest-api-mock-layer
+      Description: Set of utilities for Rest API Mock
+      ContentUri: layer/
+      CompatibleRuntimes:
+        - nodejs16.x
+
+  CustomMappingTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: correlationId
+          AttributeType: S
+        - AttributeName: mappingId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: correlationId
+          KeyType: HASH
+        - AttributeName: mappingId
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+  LogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: correlationId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: correlationId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+  MockHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 500
+      FailOnWarnings: True
+
+  FunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                Effect: Allow
+                Resource:
+                  - !GetAtt CustomMappingTable.Arn
+                  - !GetAtt LogTable.Arn
+
+  ProcessRequestLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ProcessRequest}"
+      RetentionInDays: 7
+
+  ManageCustomMappingsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ManageCustomMappings}"
+      RetentionInDays: 7
+
+  GetLogEntriesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetLogEntries}"
+      RetentionInDays: 7
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+
+Mappings:
+  Fn::Transform:
+    Name: AWS::Include
+    Parameters:
+      Location: mappings.yaml

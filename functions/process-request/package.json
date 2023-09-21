@@ -1,0 +1,17 @@
+{
+  "name": "process-request",
+  "version": "1.0.0",
+  "description": "Processes requests to mocked resources",
+  "dependencies": {
+    "yaml": "^2.2.2",
+    "jsonpath-plus": "^7.2.0",
+    "handlebars": "^4.7.7",
+    "moment": "^2.29.4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^9.2.2",
+    "mockery": "^2.1.0",
+    "sinon": "^9.0.2"
+  }
+}

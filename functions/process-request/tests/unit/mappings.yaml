@@ -1,0 +1,150 @@
+mappings:
+  - id: testDuplication1
+    description: some description
+    priority: 1
+    request:
+      path: /testMappingDuplication
+    response:
+      status: 200
+      body: testDuplication1
+
+  - id: testDuplication2
+    description: some description
+    priority: 1
+    request:
+      path: /testMappingDuplication
+    response:
+      status: 200
+      body: testDuplication2
+
+  - id: mapStaticPathAndMethodAndBody_returnStatusAndHeadersAndJsonBody
+    description: some description
+    priority: 1
+    request:
+      path: /testStaticPathAndMethodAndBody
+      method: GET
+      body: Test body
+    response:
+      status: 200
+      headers:
+        content-type: application/json
+        test-header: testHeaderValue
+      body: '{ "Result": "TEST" }'
+
+  - id: mapPathMatchesRegex
+    priority: 1
+    request:
+      path:
+        matchesRegex: ^/mapPathMatchesR?egex$
+      method:
+        - POST
+    response:
+      status: 200
+      body: mapPathMatchesRegex
+
+  - id: mapBodyMatchesRegex
+    request:
+      method: POST
+      body:
+        matchesRegex: bodyMatchesRegex\d{3}
+    response:
+      status: 200
+      body: bodyMatchesRegex
+
+  - id: mapBodyMatchesJsonPath_whenNoContentType
+    request:
+      path: /bodyMatchesJsonPath1
+      method: POST
+      body:
+        matchesJsonPath: $.items[?(!@.key1)]
+    response:
+      status: 200
+      body: bodyMatchesJsonPath1
+
+  - id: mapBodyMatchesJsonPath_whenJsonContentType
+    request:
+      path: /bodyMatchesJsonPath2
+      method: POST
+      body:
+        matchesJsonPath: $.items[?(@.num>9)]
+    response:
+      status: 200
+      body: bodyMatchesJsonPath2
+
+  - id: mapBodyMatchesJsonPath_whenPlainTextContentType
+    request:
+      path: /bodyMatchesJsonPath3
+      method: POST
+      body:
+        matchesJsonPath: $
+    response:
+      status: 200
+      body: bodyMatchesJsonPath3
+
+  - id: mapMultipleMethods
+    priority: 1
+    request:
+      path: /mapMultipleMethods
+      method:
+        - GET
+        - POST
+        - PUT
+    response:
+      status: 200
+      body: mapMultipleMethods
+
+  - id: mapHeaderStaticAndMatchesRegex
+    description: mapHeaderStaticAndMatchesRegex
+    request:
+      path: /mapHeaderStaticAndMatchesRegex
+      headers:
+        TEST-HEADER1: header1_value
+        test-header2:
+          matchesRegex: ^header2_\w*
+    response:
+      status: 200
+      body: mapHeaderStaticAndMatchesRegex
+
+  - id: testPriority1
+    description: Test priorities for equivalent mappings
+    request:
+      path: /testPriority
+    response:
+      status: 200
+      body: testPriority1
+
+  - id: testPriority2
+    description: Test priorities for equivalent mappings
+    priority: 99
+    request:
+      path: /testPriority
+    response:
+      status: 200
+      body: testPriority2
+
+  - id: testPriority3
+    description: Test priorities for equivalent mappings. The highest one
+    priority: 999
+    request:
+      path: /testPriority
+    response:
+      status: 200
+      body: testPriority3
+
+  - id: testExpressions
+    priority: 1
+    request:
+      path: /testExpressions
+    response:
+      status: 200
+      headers:
+        response-header: "{{request.path}}"
+      body: |
+        {{request.method}} 
+        {{env.headers.request-header}}
+        {{now}}
+        {{now format='HH:mm:ss'}}
+        {{random type='number' length=5}} 
+        {{random type='string' length=5}} 
+        {{random type='uuid' length=5}}
+        {{requestJsonPath path='$.items[0].prop'}}

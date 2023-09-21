@@ -1,0 +1,5 @@
+{
+  "name": "manage-custom-mappings",
+  "version": "1.0.0",
+  "description": "Adds, updates, deletes custom mappings by correlation id"
+}

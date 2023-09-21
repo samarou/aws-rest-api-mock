@@ -1,0 +1,53 @@
+mappings:
+  - id: example.createObject
+    description: Mocks Object Creation
+    request:
+      path: /example/object
+      method: POST
+      headers:
+        Authorization: Basic basic==
+    response:
+      status: 200
+      headers:
+        content-type: application/json
+      body: '{ "ID": "{{random}}" }'
+
+  - id: example.Authentication
+    description: Mocks OAuth API
+    request:
+      path: /oauth2/token
+      method: POST
+      headers:
+        Authorization: Basic basic==
+    response:
+      status: 200
+      headers:
+        content-type: application/json
+      body: '{ "access_token": "0123456789==" }'
+
+  - id: example.compositeRequest
+    description: Mocks Composite API
+    request:
+      path: /example/composite
+      method: POST
+      headers:
+        Authorization: Bearer 0123456789==
+    response:
+      status: 200
+      headers:
+        content-type: application/json
+      body: |
+        {
+            "compositeResponse": [
+                {{#each (requestJsonPath path='$.requestItem')}}
+                {
+                    "responseItem": {
+                        "id": "{{random}}",
+                        "success": true
+                    },
+                    "statusCode": 201,
+                    "requestItemId": "{{id}}"
+                }{{#unless @last}},{{/unless}}
+                {{/each}}
+            ]ó
+        }

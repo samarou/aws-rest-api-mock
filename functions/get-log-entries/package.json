@@ -1,0 +1,5 @@
+{
+  "name": "get-log-entries",
+  "version": "1.0.0",
+  "description": "Returns log entries for correlation id"
+}

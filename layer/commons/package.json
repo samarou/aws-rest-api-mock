@@ -1,0 +1,15 @@
+{
+  "name": "rest-api-mock-layer",
+  "version": "1.0.0",
+  "description": "Set of utilities for Rest API Mock",
+  "scripts": {
+    "test": "mocha tests/**/*.js"
+  },
+  "dependencies": {
+    "ajv": "^4.11.8",
+    "yaml": "^2.2.1"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1392.0"
+  }
+}

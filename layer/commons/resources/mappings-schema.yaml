@@ -1,0 +1,101 @@
+$ref: '#/definitions/MappingsConfig'
+definitions:
+  MappingsConfig:
+    type: object
+    properties:
+      mappings:
+        type: array
+        items:
+          $ref: '#/definitions/Mapping'
+    required:
+      - mappings
+  Mapping:
+    type: object
+    properties:
+      id:
+        type: string
+      description:
+        type: string
+      priority:
+        type: integer
+      request:
+        $ref: '#/definitions/Request'
+      response:
+        $ref: '#/definitions/Response'
+    required:
+      - id
+      - request
+      - response
+  Request:
+    type: object
+    properties:
+      path:
+        $ref: '#/definitions/RequestPath'
+      method:
+        $ref: '#/definitions/RequestMethod'
+      headers:
+        $ref: '#/definitions/RequestHeaders'
+      body:
+        $ref: '#/definitions/RequestBody'
+  RequestPath:
+    anyOf:
+      - type: string
+      - $ref: '#/definitions/RequestPathMatches'
+  RequestMethod:
+    anyOf:
+      - type: string
+      - type: array
+        items:
+          type: string
+  RequestHeaders:
+    type: object
+    additionalProperties:
+      anyOf:
+        - type: string
+        - $ref: '#/definitions/RequestHeaderMatches'
+  RequestBody:
+    anyOf:
+      - type: string
+      - $ref: '#/definitions/RequestBodyMatches'
+  RequestPathMatches:
+    type: object
+    properties:
+      matchesRegex:
+        type: string
+    required:
+      - matchesRegex
+  RequestHeaderMatches:
+    type: object
+    properties:
+      matchesRegex:
+        type: string
+    required:
+      - matchesRegex
+  RequestBodyMatches:
+    type: object
+    properties:
+      matchesRegex:
+        type: string
+      matchesJsonPath:
+        type: string
+    oneOf:
+      - required:
+          - matchesRegex
+      - required:
+          - matchesJsonPath
+  Response:
+    type: object
+    properties:
+      status:
+        type: integer
+      headers:
+        $ref: '#/definitions/ResponseHeaders'
+      body:
+        type: string
+    required:
+      - status
+      - body
+  ResponseHeaders:
+    type: object
+    additionalProperties:
+      type: string
